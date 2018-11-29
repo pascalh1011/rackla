@@ -18,14 +18,14 @@ defmodule Rackla.Mixfile do
   end
 
   defp applications(:dev), do: applications(:all) ++ [:remix]
-  defp applications(_all), do: [:logger, :plug, :hackney, :poison]
+  defp applications(_all), do: [:logger, :plug, :hackney]
 
   defp deps do
     [
-      {:poison, "~> 2.2"},
-      {:hackney, "~> 1.6"},
+      {:jason, "~> 1.0"},
+      {:hackney, "~> 1.0"},
       {:cowboy, "~> 1.0", optional: true},
-      {:plug, "~> 1.2"},
+      {:plug, "~> 1.6.0"},
       {:earmark, "~> 1.0", only: :dev},
       {:ex_doc, "~> 0.13", only: :dev},
       {:remix, "~> 0.0", only: :dev},

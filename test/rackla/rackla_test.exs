@@ -1,4 +1,4 @@
-defmodule Rackla.Tests do
+  defmodule Rackla.Tests do
   use ExUnit.Case, async: false
   use Plug.Test
 
@@ -61,7 +61,7 @@ defmodule Rackla.Tests do
       _ -> flunk("Expected Rackla.Response, got: #{inspect(response_item)}")
     end
   end
-  
+
   test "Rackla.collect - request specific :full == true" do
     [only_body, full] =
       [
@@ -75,13 +75,13 @@ defmodule Rackla.Tests do
       |> collect
 
     assert is_binary(only_body)
-    
+
     case full do
       %Rackla.Response{} -> :ok
       _ -> flunk("Expected Rackla.Response, got #{inspect(full)}")
     end
   end
-  
+
   test "Rackla.collect - request specific :full == false" do
     [only_body, full] =
       [
@@ -95,13 +95,13 @@ defmodule Rackla.Tests do
       |> collect
 
     assert is_binary(only_body)
-    
+
     case full do
       %Rackla.Response{} -> :ok
       _ -> flunk("Expected Rackla.Response, got #{inspect(full)}")
     end
-  end  
-  
+  end
+
   test "Rackla.collect - collect single response (PUT)" do
     response_item =
       %Rackla.Request{method: :put, url: "http://localhost:#{@test_router_port}/api/text/foo-bar"}
@@ -532,110 +532,110 @@ defmodule Rackla.Tests do
 
     assert response == "ok"
   end
-  
+
   test "Follow redirect - do not follow by default" do
-    response = 
+    response =
       %Rackla.Request{
         url: "http://localhost:#{@test_router_port}/test/redirect/1",
       }
       |> request
       |> collect
-      
+
     assert response == "redirect body"
   end
-  
+
   test "Follow redirect - follow redirect can be enabled in global setting" do
-    response = 
+    response =
       %Rackla.Request{
         url: "http://localhost:#{@test_router_port}/test/redirect/1",
       }
       |> request(follow_redirect: true)
       |> collect
-      
+
     assert response == "redirect done!"
   end
-  
+
   test "Follow redirect - follow redirect can be enabled in request setting" do
-    response = 
+    response =
       %Rackla.Request{
         url: "http://localhost:#{@test_router_port}/test/redirect/1",
         options: %{follow_redirect: true}
       }
       |> request
       |> collect
-      
+
     assert response == "redirect done!"
   end
-  
+
   test "Max redirect - default should be 5" do
-    response = 
+    response =
       %Rackla.Request{
         url: "http://localhost:#{@test_router_port}/test/redirect/5",
       }
       |> request(follow_redirect: true)
       |> collect
-      
+
     assert response == "redirect done!"
-    
-    response = 
+
+    response =
       %Rackla.Request{
         url: "http://localhost:#{@test_router_port}/test/redirect/6",
       }
       |> request(follow_redirect: true)
       |> collect
-      
+
     assert response == {:error, :max_redirect_overflow}
   end
-  
+
   test "Max redirect - change number of redirects in global setting" do
-    response = 
+    response =
       %Rackla.Request{
         url: "http://localhost:#{@test_router_port}/test/redirect/10",
       }
       |> request(follow_redirect: true, max_redirect: 10)
       |> collect
-      
+
     assert response == "redirect done!"
   end
-  
+
   test "Max redirect - change number of redirects in request setting" do
-    response = 
+    response =
       %Rackla.Request{
         url: "http://localhost:#{@test_router_port}/test/redirect/10",
         options: %{follow_redirect: true, max_redirect: 10}
       }
       |> request
       |> collect
-      
+
     assert response == "redirect done!"
   end
-  
+
   test "POST redirect - POST are not following redirect by default" do
-    response = 
+    response =
       %Rackla.Request{
         method: :post,
         url: "http://localhost:#{@test_router_port}/test/post-redirect/5",
       }
       |> request(follow_redirect: true)
       |> collect
-      
+
     assert response == {:error, :force_redirect_disabled}
   end
-  
+
   test "POST redirect - POST can be forced to follow redirects in global setting" do
-    response = 
+    response =
       %Rackla.Request{
         method: :post,
         url: "http://localhost:#{@test_router_port}/test/post-redirect/5",
       }
       |> request(follow_redirect: true, force_redirect: true)
       |> collect
-      
+
     assert response == "post redirect done!"
   end
-  
+
   test "POST redirect - POST can be forced to follow redirects in request setting" do
-    response = 
+    response =
       %Rackla.Request{
         method: :post,
         url: "http://localhost:#{@test_router_port}/test/post-redirect/5",
@@ -643,14 +643,14 @@ defmodule Rackla.Tests do
       }
       |> request
       |> collect
-      
+
     assert response == "post redirect done!"
   end
-  
+
   test "Convert incoming request to a Rackla.Request" do
     body = "this is a test body"
     url = "http://localhost:#{@test_router_port}/test/incoming_request_with_options"
-    
+
     response =
       %Rackla.Request{
         method: :post,
@@ -660,21 +660,21 @@ defmodule Rackla.Tests do
       }
       |> request
       |> collect
-      |> Poison.decode!
-      
+      |> Jason.decode!
+
     assert Map.get(response, "body") == body
     assert Map.get(response, "method") == "post"
     assert Map.get(response, "options") == %{"connect_timeout" => 1337}
     assert Map.get(response, "url") == url
     assert response |> Map.get("headers") |> Map.get("test-header") == "test-value"
   end
-  
+
   test "Convert incoming request with complex url to a Rackla.Request" do
     username_password = "user:password"
     scheme = "http://"
     url = "#{scheme}localhost:#{@test_router_port}/test/incoming_request?key1=value1&key2=value2"
     url_with_authorization = url |> String.split(scheme) |> Enum.join("#{scheme}#{username_password}@")
-    
+
     response =
       %Rackla.Request{
         method: :get,
@@ -682,8 +682,8 @@ defmodule Rackla.Tests do
       }
       |> request
       |> collect
-      |> Poison.decode!
-      
+      |> Jason.decode!
+
     assert Map.get(response, "method") == "get"
     assert Map.get(response, "url") == url
     assert response |> Map.get("headers") |> Map.get("authorization") == "Basic #{Base.encode64(username_password)}"

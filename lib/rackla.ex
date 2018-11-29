@@ -1,7 +1,7 @@
 defmodule Rackla do
-  @moduledoc Regex.replace(~r/```(elixir|json)(\n|.*)```/Us, File.read!("README.md"), 
+  @moduledoc Regex.replace(~r/```(elixir|json)(\n|.*)```/Us, File.read!("README.md"),
   fn(_, _, code) -> Regex.replace(~r/^/m, code, "    ") end)
-  
+
   import Plug.Conn
   require Logger
 
@@ -9,34 +9,34 @@ defmodule Rackla do
   defstruct producers: []
 
   @doc """
-  Takes a single string (URL) or a `Rackla.Request` struct and  executes a HTTP 
+  Takes a single string (URL) or a `Rackla.Request` struct and  executes a HTTP
   request to the defined server. You can, by using the  `Rackla.Request` struct,
   specify more advanced options for your request such  as which HTTP verb to use
-  but also individual connection timeout limits etc.  You can also call this 
-  function with a list of strings or `Rackla.Request` structs in order to 
+  but also individual connection timeout limits etc.  You can also call this
+  function with a list of strings or `Rackla.Request` structs in order to
   perform multiple requests concurrently.
-  
-  This function will return a `Rackla` type which will contain the results 
+
+  This function will return a `Rackla` type which will contain the results
   from the request(s) once available or an `:error` tuple in case of failures
-  such non-responding servers or DNS lookup failures. Per default, on success, it 
-  will only contain the response payload but the entire response can be used by 
+  such non-responding servers or DNS lookup failures. Per default, on success, it
+  will only contain the response payload but the entire response can be used by
   setting the option `:full` to true.
 
   Options:
    * `:full` - If set to true, the `Rackla` type will contain a `Rackla.Response`
    struct with the status code, headers and body (payload), default: false.
-   * `:connect_timeout` - Connection timeout limit in milliseconds, default: 
+   * `:connect_timeout` - Connection timeout limit in milliseconds, default:
    `5_000`.
-   * `:receive_timeout` - Receive timeout limit in milliseconds, default: 
+   * `:receive_timeout` - Receive timeout limit in milliseconds, default:
    `5_000`.
-   * `:insecure` - If set to true, SSL certificates will not be checked, 
+   * `:insecure` - If set to true, SSL certificates will not be checked,
    default: `false`.
-   * `:follow_redirect` - If set to true, Rackla will follow redirects, 
+   * `:follow_redirect` - If set to true, Rackla will follow redirects,
    default: `false`.
    * `:max_redirect` - Maximum number of redirects, default: `5`.
    * `:force_redirect` - Force follow redirect (e.g. POST), default: `false`.
    * `:proxy` - Proxy to use, see `Rackla.Proxy`, default: `nil`.
-   
+
   If you specify any options in a `Rackla.Request` struct, these will overwrite
   the options passed to the `request` function for that specific request.
   """
@@ -46,8 +46,8 @@ defmodule Rackla do
   def request(requests, options) when is_list(requests) do
     producers =
       Enum.map(requests, fn(request) ->
-        request = 
-          if is_binary(request) do 
+        request =
+          if is_binary(request) do
             %Rackla.Request{url: request}
           else
             request
@@ -62,41 +62,41 @@ defmodule Rackla do
             global_follow_redirect = Keyword.get(options, :follow_redirect, false)
             global_max_redirect = Keyword.get(options, :max_redirect, 5)
             global_force_redirect = Keyword.get(options, :force_redirect, false)
-            
+
             global_proxy = Keyword.get(options, :proxy)
             request_proxy = Map.get(request_options, :proxy)
-            
-            rackla_proxy = 
+
+            rackla_proxy =
               cond do
                 request_proxy -> request_proxy
                 global_proxy -> global_proxy
                 true -> nil
               end
-            
+
             proxy_options =
               case rackla_proxy do
                 %Rackla.Proxy{type: type, host: host, port: port, username: username, password: password, pool: pool} ->
                   proxy_basic_setting = [proxy: {type, String.to_char_list(host), port}]
-                  
+
                   auth_settings =
                     case type do
                       :socks5 ->
                         socks5_user = if username, do: [socks5_user: username], else: []
-                        socks5_pass = if password, do: [socks5_pass: password], else: []  
-                        
+                        socks5_pass = if password, do: [socks5_pass: password], else: []
+
                         socks5_user ++ socks5_pass
-                      :connect -> 
+                      :connect ->
                         if username && password do
                           [proxy_auth: {username, password}]
                         else
                          []
                        end
                     end
-                  
+
                   pool_setting = if pool, do: [pool: pool], else: []
-                  
+
                   proxy_basic_setting ++ auth_settings ++ pool_setting
-                
+
                 nil -> []
               end
 
@@ -117,18 +117,18 @@ defmodule Rackla do
               )
 
             case hackney_request do
-              {:ok, {:maybe_redirect, _, _, _}} -> 
+              {:ok, {:maybe_redirect, _, _, _}} ->
                 warn_request(:force_redirect_disabled)
-              
+
               {:ok, status, headers, body_ref} ->
                 case :hackney.body(body_ref) do
                   {:ok, body} ->
                     consumer = receive do
                       {pid, :ready} -> pid
                     end
-                    
+
                     global_full = Keyword.get(options, :full, false)
-                    
+
                     response =
                       if Map.get(request_options, :full, global_full) do
                         %Rackla.Response{status: status, headers: headers |> Enum.into(%{}), body: body}
@@ -162,7 +162,7 @@ defmodule Rackla do
 
   @doc """
   Takes any type an encapsulates it in a `Rackla` type.
-  
+
   Example:
       Rackla.just([1,2,3]) |> Rackla.map(&IO.inspect/1)
       [1, 2, 3]
@@ -182,9 +182,9 @@ defmodule Rackla do
   end
 
   @doc """
-  Takes a list of and encapsulates each of the containing elements separately 
+  Takes a list of and encapsulates each of the containing elements separately
   in a `Rackla` type.
-  
+
   Example:
       Rackla.just_list([1,2,3]) |> Rackla.map(&IO.inspect/1)
       3
@@ -199,9 +199,9 @@ defmodule Rackla do
   end
 
   @doc """
-  Returns a new `Rackla` type, where each encapsulated item is the result of 
+  Returns a new `Rackla` type, where each encapsulated item is the result of
   invoking `fun` on each corresponding encapsulated item.
-  
+
   Example:
       Rackla.just_list([1,2,3]) |> Rackla.map(fn(x) -> x * 2 end) |> Rackla.collect
       [2, 4, 6]
@@ -240,16 +240,16 @@ defmodule Rackla do
   end
 
   @doc """
-  Takes a `Rackla` type, applies the specified function to each of the 
-  elements encapsulated in it and returns a new `Rackla` type with the 
+  Takes a `Rackla` type, applies the specified function to each of the
+  elements encapsulated in it and returns a new `Rackla` type with the
   results. The given function must return a `Rackla` type.
-  
+
   This function is useful when you want to create a new request pipeline based
-  on the results of a previous request. In those cases, you can use 
-  `Rackla.flat_map` to access the response from a request and call 
-  `Rackla.request` inside the function since `Rackla.request` returns a 
+  on the results of a previous request. In those cases, you can use
+  `Rackla.flat_map` to access the response from a request and call
+  `Rackla.request` inside the function since `Rackla.request` returns a
   `Rackla` type.
-  
+
   Example:
       Rackla.just_list([1,2,3]) |> Rackla.flat_map(fn(x) -> Rackla.just(x * 2) end) |> Rackla.collect
       [2, 4, 6]
@@ -288,10 +288,10 @@ defmodule Rackla do
 
   @doc """
   Invokes `fun` for each element in the `Rackla` type passing that element and
-  the accumulator `acc` as arguments. `fun`s return value is stored in `acc`. The 
-  first element of the collection is used as the initial value of `acc`. Returns 
+  the accumulator `acc` as arguments. `fun`s return value is stored in `acc`. The
+  first element of the collection is used as the initial value of `acc`. Returns
   the accumulated value inside a `Rackla` type.
-  
+
   Example:
       Rackla.just_list([1,2,3]) |> Rackla.reduce(fn (x, acc) -> x + acc end) |> Rackla.collect
       6
@@ -312,9 +312,9 @@ defmodule Rackla do
 
   @doc """
   Invokes `fun` for each element in the `Rackla` type passing that element and
-  the accumulator `acc` as arguments. fun's return value is stored in `acc`.  
+  the accumulator `acc` as arguments. fun's return value is stored in `acc`.
   Returns  the accumulated value inside a `Rackla` type.
-  
+
   Example:
       Rackla.just_list([1,2,3]) |> Rackla.reduce(10, fn (x, acc) -> x + acc end) |> Rackla.collect
       16
@@ -369,11 +369,11 @@ defmodule Rackla do
       end
     end)
   end
-  
+
   @doc """
-  Returns the element encapsulated inside a `Rackla` type, or a list of 
+  Returns the element encapsulated inside a `Rackla` type, or a list of
   elements in case the `Rackla` type contains many elements.
-  
+
   Example:
       Rackla.just_list([1,2,3]) |> Rackla.collect
       [1,2,3]
@@ -405,7 +405,7 @@ defmodule Rackla do
   @doc """
   Returns a new `Rackla` type by joining the encapsulated elements from two
   `Rackla` types.
-  
+
   Example:
       Rackla.join(Rackla.just(1), Rackla.just(2)) |> Rackla.collect
       [1, 2]
@@ -417,21 +417,21 @@ defmodule Rackla do
 
   @doc """
   Converts a `Rackla` type to a HTTP response and send it to the client by
-  using `Plug.Conn`. The `Plug.Conn` will be taken implicitly by looking for a 
-  variable named `conn`. If you want to specify which `Plug.Conn` to use, you 
+  using `Plug.Conn`. The `Plug.Conn` will be taken implicitly by looking for a
+  variable named `conn`. If you want to specify which `Plug.Conn` to use, you
   can use `Rackla.response_conn`.
-  
-  Strings will be sent as is to the client. If the `Rackla` type contains any 
+
+  Strings will be sent as is to the client. If the `Rackla` type contains any
   other type such as a list, it will be converted into a string by using `inspect`
   on it. You can also convert Elixir data types to JSON format by setting the
   option `:json` to true.
-  
+
   Using this macro is the same as writing:
       conn = response_conn(rackla, conn, options)
-  
+
   Options:
    * `:compress` - Compresses the response by applying a gzip compression to it.
-   When this option is used, the entire response has to be sent in one chunk. 
+   When this option is used, the entire response has to be sent in one chunk.
    You can't reuse the `conn` to send any more data after `Rackla.response` with
    `:compress` set to `true` has been invoked. When set to `true`, Rackla will
    check the request header `content-encoding` to make sure the client accepts
@@ -462,27 +462,27 @@ defmodule Rackla do
         response_async(rackla, conn, options)
     end
   end
-  
+
   @doc """
   Convert an incoming request (from `Plug`) to a `Rackla.Request`.
   If `options` is specified, it will be added to the `Rackla.Request`.
   For valid options, see documentation for `Rackla.Request`.
-  
-  Returns either `{:ok, Rackla.Request}` or `{:error, reason}` as per 
+
+  Returns either `{:ok, Rackla.Request}` or `{:error, reason}` as per
   `:gen_tcp.recv/2`.
-  
-  The `Plug.Conn` will be taken implicitly by looking for a variable named 
-  `conn`. If you want to specify which `Plug.Conn` to use, you can use 
+
+  The `Plug.Conn` will be taken implicitly by looking for a variable named
+  `conn`. If you want to specify which `Plug.Conn` to use, you can use
   `Rackla.incoming_request_conn`.
-  
+
   Using this macro is the same as writing:
     `conn = incoming_request_conn(conn, options)`
-  
+
   From `Plug.Conn` documentation:
-  Because the request body can be of any size, reading the body will only work 
-  once, as Plug will not cache the result of these operations. If you need to 
-  access the body multiple times, it is your responsibility to store it. Finally 
-  keep in mind some plugs like Plug.Parsers may read the body, so the body may 
+  Because the request body can be of any size, reading the body will only work
+  once, as Plug will not cache the result of these operations. If you need to
+  access the body multiple times, it is your responsibility to store it. Finally
+  keep in mind some plugs like Plug.Parsers may read the body, so the body may
   be unavailable after being accessed by such plugs.
   """
   @spec incoming_request(%{}) :: {:ok, Rackla.Request.t} | {:error, atom}
@@ -493,8 +493,8 @@ defmodule Rackla do
       rackla_request
     end
   end
-  
-  @doc """ 
+
+  @doc """
   See see incoming_request with options.
   """
   @spec incoming_request() :: {:ok, Rackla.Request.t} | {:error, atom}
@@ -505,41 +505,41 @@ defmodule Rackla do
       rackla_request
     end
   end
-    
+
   @doc """
   See documentation for `Rackla.incoming_request`.
   """
   @spec incoming_request_conn(Plug.Conn.t, %{}) :: {Plug.Conn.t, {:ok, Rackla.Request.t}} | {Plug.Conn.t, {:error, atom}}
   def incoming_request_conn(conn, options \\ %{}) do
-    response_body = 
-      Stream.unfold(Plug.Conn.read_body(conn), fn 
-        :done -> 
+    response_body =
+      Stream.unfold(Plug.Conn.read_body(conn), fn
+        :done ->
           nil;
-        
-        {:ok, body, new_conn} -> 
+
+        {:ok, body, new_conn} ->
           {{new_conn, body}, :done};
-        
-        {:more, partial_body, new_conn} -> 
+
+        {:more, partial_body, new_conn} ->
           {partial_body, Plug.Conn.read_body(new_conn)};
-        
-        {:error, term} -> 
+
+        {:error, term} ->
           {{:error, term}, :done}
       end)
-      |> Enum.reduce({"", conn}, fn 
+      |> Enum.reduce({"", conn}, fn
         ({:error, term}, {_body_acc, conn_acc}) -> {{:error, term}, conn_acc};
         ({new_conn, body}, {body_acc, _conn_acc}) -> {{:ok, body_acc <> body}, new_conn};
         (partial_body, {body_acc, conn_acc}) -> {body_acc <> partial_body, conn_acc}
       end)
-      
+
     case response_body do
       {{:error, term}, final_conn} -> {final_conn, {:error, term}}
-      
+
       {{:ok, body}, final_conn} ->
         method = conn.method |> String.downcase |> String.to_atom
         query_string =  if conn.query_string != "", do: "?#{conn.query_string}", else: ""
         url = "#{Atom.to_string(conn.scheme)}://#{conn.host}:#{conn.port}#{conn.request_path}#{query_string}"
         headers = Enum.into(conn.req_headers, %{})
-        
+
         rackla_request =
           %Rackla.Request{
             method: method,
@@ -548,7 +548,7 @@ defmodule Rackla do
             body: body,
             options: options
           }
-          
+
         {final_conn, {:ok, rackla_request}}
     end
   end
@@ -573,7 +573,7 @@ defmodule Rackla do
   defp send_chunks([], conn), do: conn
 
   defp send_chunks(producers, conn) when is_list(producers) do
-    send_thing = 
+    send_thing =
       fn(thing, remaining_producers, conn) ->
         thing = if is_binary(thing), do: thing, else: inspect(thing)
 
@@ -589,7 +589,7 @@ defmodule Rackla do
 
     receive do
       {message_producer, thing} ->
-        {remaining_producers, current_producer} = 
+        {remaining_producers, current_producer} =
           Enum.partition(producers, &(&1 != message_producer))
 
         if (current_producer == []) do
@@ -608,7 +608,7 @@ defmodule Rackla do
         end
     end
   end
-  
+
   @spec prepare_conn(Plug.Conn.t, integer, %{}) :: Plug.Conn.t
   defp prepare_conn(conn, status, headers) do
     if (conn.state == :chunked) do
@@ -619,24 +619,24 @@ defmodule Rackla do
       |> send_chunked(status)
     end
   end
-  
+
   @spec response_sync_chunk(t, Plug.Conn.t, Keyword.t) :: Plug.Conn.t
   defp response_sync_chunk(%Rackla{} = rackla, conn, options) do
     conn = prepare_conn(conn, Keyword.get(options, :status, 200), Keyword.get(options, :headers, %{}))
-    
+
     Enum.reduce(prepare_chunks(rackla), conn, fn(pid, conn) ->
       receive do
         {^pid, {:rackla, nested_rackla}} ->
           response_sync_chunk(nested_rackla, conn, options)
-          
+
         {^pid, thing} ->
           thing = if elem(thing, 0) == :ok, do: elem(thing, 1), else: thing
           thing = if is_binary(thing), do: thing, else: inspect(thing)
-          
+
           case chunk(conn, thing) do
             {:ok, new_conn} ->
               new_conn
-      
+
             {:error, reason} ->
               warn_response(reason)
               conn
@@ -650,11 +650,11 @@ defmodule Rackla do
     response_encoded =
       if Keyword.get(options, :json, false) do
         response = collect(rackla)
-        
+
         if is_list(response) do
           Enum.map(response, fn(thing) ->
             if is_binary(thing) do
-              case Poison.decode(thing) do
+              case Jason.decode(thing) do
                 {:ok, decoded} -> decoded
                 {:error, _reason} -> thing
               end
@@ -662,19 +662,19 @@ defmodule Rackla do
               thing
             end
           end)
-          |> Poison.encode
+          |> Jason.encode
         else
           if is_binary(response) do
-            case Poison.decode(response) do
+            case Jason.decode(response) do
               {:ok, _decoded} -> {:ok, response}
-              {:error, _reason} -> Poison.encode(response)
+              {:error, _reason} -> Jason.encode(response)
             end
           else
-            Poison.encode(response)
+            Jason.encode(response)
           end
         end
       else
-        binary = 
+        binary =
           Enum.map(collect_recursive(rackla), &(if is_binary(&1), do: &1, else: inspect(&1)))
           |> Enum.join
 
@@ -685,10 +685,10 @@ defmodule Rackla do
       {:ok, response_binary} ->
         headers = Keyword.get(options, :headers, %{})
         compress = Keyword.get(options, :compress, false)
-        
-        {response_binary, headers} = 
+
+        {response_binary, headers} =
           if compress do
-            allow_gzip = 
+            allow_gzip =
               Plug.Conn.get_req_header(conn, "accept-encoding")
               |> Enum.flat_map(fn(encoding) ->
                 String.split(encoding, ",", trim: true)
@@ -705,7 +705,7 @@ defmodule Rackla do
             {response_binary, headers}
           end
 
-        conn = 
+        conn =
           if Keyword.get(options, :json, false) do
             put_resp_content_type(conn, "application/json")
           else
@@ -726,13 +726,13 @@ defmodule Rackla do
         end
 
       {:error, reason} ->
-        case Logger.error("Response decoding error: #{inspect(reason)}") do 
-          {:error, logger_reason} -> 
+        case Logger.error("Response decoding error: #{inspect(reason)}") do
+          {:error, logger_reason} ->
             IO.puts(:std_err, "Unable to log \"Response decoding error: #{inspect(reason)}\", reason: #{inspect(logger_reason)}")
-            
+
           :ok -> :ok
         end
-        
+
         conn
     end
   end
@@ -747,12 +747,12 @@ defmodule Rackla do
   @spec warn_response(any) :: :ok
   defp warn_response(reason) do
     case Logger.error("HTTP response error: #{inspect(reason)}") do
-      {:error, logger_reason} -> 
+      {:error, logger_reason} ->
         IO.puts(:std_err, "Unable to log \"HTTP response error: #{inspect(reason)}\", reason: #{inspect(logger_reason)}")
 
       :ok -> :ok
     end
-    
+
     :ok
   end
 
@@ -761,7 +761,7 @@ defmodule Rackla do
     case Logger.warn("HTTP request error: #{inspect(reason)}") do
       {:error, logger_reason} ->
         IO.puts(:std_err, "Unable to log \"HTTP request error: #{inspect(reason)}\", reason: #{inspect(logger_reason)}")
-        
+
       :ok -> :ok
     end
 

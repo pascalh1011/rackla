@@ -72,7 +72,7 @@ defmodule Rackla.RouterTest do
     assert conn.method == "GET"
     assert conn.resp_body == "okfoo-bar"
   end
-  
+
   test "Proxy with compression" do
     conn =
       :get
@@ -87,7 +87,7 @@ defmodule Rackla.RouterTest do
     assert :zlib.gunzip(conn.resp_body) == "foo-bar"
     assert get_resp_header(conn, "content-encoding") == ["gzip"]
   end
-  
+
   test "Proxy with compression - missing accept-encoding" do
     conn =
       :get
@@ -100,7 +100,7 @@ defmodule Rackla.RouterTest do
     assert conn.method == "GET"
     assert conn.resp_body == "foo-bar"
   end
-  
+
   test "Proxy with compression, forced - missing accept-encoding)" do
     conn =
       :get
@@ -125,7 +125,7 @@ defmodule Rackla.RouterTest do
     assert conn.status == 200
     assert conn.scheme == :http
     assert conn.method == "GET"
-    assert conn.resp_body == Poison.encode!(%{foo: "bar"})
+    assert conn.resp_body == Jason.encode!(%{foo: "bar"})
     assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
   end
 
@@ -139,7 +139,7 @@ defmodule Rackla.RouterTest do
     assert conn.status == 200
     assert conn.scheme == :http
     assert conn.method == "GET"
-    assert conn.resp_body == Poison.encode!([%{foo: "bar"}, "hello!", 1, [1.0, 2.0, 3.0]])
+    assert conn.resp_body == Jason.encode!([%{foo: "bar"}, "hello!", 1, [1.0, 2.0, 3.0]])
     assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
   end
 end

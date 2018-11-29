@@ -38,7 +38,7 @@ defmodule TestRouter do
     |> request
     |> response(compress: true)
   end
-  
+
   get "/test/proxy/gzip/force" do
     conn.query_string
     |> request
@@ -63,7 +63,7 @@ defmodule TestRouter do
     |> join(just([1.0, 2.0, 3.0]))
     |> response(json: true)
   end
-  
+
   get "/test/redirect/:retires" do
     {retries, _} = Integer.parse(retires)
 
@@ -74,10 +74,10 @@ defmodule TestRouter do
       |> response(status: 301, headers: %{"location" => "/test/redirect/#{retries - 1}"})
     end
   end
-  
+
   post "/test/post-redirect/:retires" do
     {retries, _} = Integer.parse(retires)
-    
+
     if retries == 0 do
       send_resp(conn, 200, "post redirect done!")
     else
@@ -85,28 +85,28 @@ defmodule TestRouter do
       |> response(status: 301, headers: %{"location" => "/test/post-redirect/#{retries - 1}"})
     end
   end
-  
+
   post "/test/incoming_request_with_options" do
     {:ok, rackla_request} = incoming_request(%{connect_timeout: 1337})
-    
+
     rackla_request
-    |> Poison.encode!
+    |> Jason.encode!
     |> just
     |> response
   end
-  
-  
+
+
   get "/test/incoming_request" do
     {:ok, rackla_request} = incoming_request()
-    
+
     rackla_request
-    |> Poison.encode!
+    |> Jason.encode!
     |> just
     |> response
   end
 
   get "/api/json/foo-bar" do
-    json = Poison.encode!(%{foo: "bar"})
+    json = Jason.encode!(%{foo: "bar"})
 
     conn
     |> put_resp_content_type("application/json")
@@ -114,7 +114,7 @@ defmodule TestRouter do
   end
 
   get "/api/json/no-header/foo-bar" do
-    json = Poison.encode!(%{foo: "bar"})
+    json = Jason.encode!(%{foo: "bar"})
     send_resp(conn, 200, json)
   end
 
@@ -131,7 +131,7 @@ defmodule TestRouter do
   end
 
   get "/api/echo/:key/:value" do
-    json = Map.put(%{foo: "bar", baz: "qux"}, key, value) |> Poison.encode!
+    json = Map.put(%{foo: "bar", baz: "qux"}, key, value) |> Jason.encode!
 
     conn
     |> put_resp_content_type("application/json")
