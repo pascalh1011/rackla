@@ -18,12 +18,12 @@ defmodule Rackla.Mixfile do
   end
 
   defp applications(:dev), do: applications(:all) ++ [:remix]
-  defp applications(_all), do: [:logger, :plug, :httpotion]
+  defp applications(_all), do: [:logger, :plug, :httpoison]
 
   defp deps do
     [
       {:jason, "~> 1.0"},
-      {:httpotion, "~> 3.1.0"},
+      {:httpoison, "~> 1.4"},
       {:cowboy, "~> 1.0", optional: true},
       {:plug, "~> 1.6.0"},
       {:earmark, "~> 1.0", only: :dev},

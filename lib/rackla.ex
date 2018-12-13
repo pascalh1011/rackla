@@ -99,24 +99,22 @@ defmodule Rackla do
                 nil -> []
               end
 
-            request = HTTPotion.request(
+            request = HTTPoison.request(
               Map.get(request, :method, :get),
               Map.get(request, :url, ""),
+              Map.get(request, :body, ""),
+              Map.get(request, :headers, %{}) |> Enum.into([]),
               [
-                body: Map.get(request, :body, ""),
-                headers: Map.get(request, :headers, %{}) |> Enum.into([]),
+                hackney: [pool: :default],
                 timeout: Map.get(request_options, :timeout, global_timeout),
-                follow_redirects: Map.get(request_options, :follow_redirect, global_follow_redirect),
+                follow_redirect: Map.get(request_options, :follow_redirect, global_follow_redirect),
               ]
             )
 
             # IO.inspect(request)
 
             case request do
-              %HTTPotion.Response{status_code: 301} ->
-                warn_request(:redirects_disabled)
-
-              %HTTPotion.Response{body: body, headers: headers, status_code: status} ->
+              {:ok, %HTTPoison.Response{body: body, headers: headers, status_code: status}} ->
                 consumer = receive do
                   {pid, :ready} -> pid
                 end
@@ -125,18 +123,19 @@ defmodule Rackla do
 
                 response =
                   if Map.get(request_options, :full, global_full) do
-                    %Rackla.Response{status: status, headers: headers.hdrs, body: body}
+                    %Rackla.Response{status: status, headers: headers |> Enum.into(%{}), body: body}
                   else
                     body
                   end
 
                 send(consumer, {self, {:ok, response}})
 
-              %HTTPotion.ErrorResponse{message: "req_timedout"} ->
-                warn_request(:timeout)
+              # {:error, %HTTPoison.Error{id: nil, reason: :nxdomain}} ->
+              # # %HTTPoison.ErrorResponse{message: "req_timedout"} ->
+              # #   warn_request(:timeout)
 
-              %HTTPotion.ErrorResponse{message: reason} ->
-                warn_request(reason |> String.to_atom())
+              {:error, %HTTPoison.Error{reason: reason}} ->
+                warn_request(reason)
             end
           end)
 
