@@ -4,7 +4,7 @@ defmodule Rackla.Proxy do
 
   Required:
   * `type` - `:socks5` (SOCKS5) or `:connect` (HTTP tunnel), default: `:socks5`.
-  * `host` - Host, example: `"127.0.0.1"` or `"localhost"`, default: `"localhost"`.
+  * `host` - Host, example: `"127.0.0.1"` or `"127.0.0.1"`, default: `"127.0.0.1"`.
   * `port` - Port, example: `8080`, default: `8080`.
 
   Optional:
@@ -23,7 +23,7 @@ defmodule Rackla.Proxy do
               pool:     atom}
 
   defstruct type:     :socks5,
-            host:     "localhost",
+            host:     "127.0.0.1",
             port:     8080,
             username: nil,
             password: nil,

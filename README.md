@@ -254,7 +254,7 @@ For more detailed information about using proxies, see the documentation for `Ra
 
 #### SOCKS5 using request setting
 ```elixir
-%Rackla.Request{url: "http://api.ipify.org", options: %{proxy: %Rackla.Proxy{type: :socks5, host: "localhost", port: 8080}}}
+%Rackla.Request{url: "http://api.ipify.org", options: %{proxy: %Rackla.Proxy{type: :socks5, host: "127.0.0.1", port: 8080}}}
 |> Rackla.request
 |> Rackla.collect
 ```
@@ -262,7 +262,7 @@ For more detailed information about using proxies, see the documentation for `Ra
 #### HTTP Tunnel using global setting
 ```elixir
 "http://api.ipify.org"
-|> Rackla.request(proxy: %Rackla.Proxy{type: :connect, host: "localhost", port: 8080})
+|> Rackla.request(proxy: %Rackla.Proxy{type: :connect, host: "127.0.0.1", port: 8080})
 |> Rackla.collect
 ```
 

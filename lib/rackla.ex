@@ -57,8 +57,7 @@ defmodule Rackla do
           Task.start_link(fn ->
             request_options = Map.get(request, :options, %{})
             global_insecure = Keyword.get(options, :insecure, false)
-            global_connect_timeout = Keyword.get(options, :connect_timeout, 5_000)
-            global_receive_timeout = Keyword.get(options, :receive_timeout, 5_000)
+            global_timeout = Keyword.get(options, :timeout, 5_000)
             global_follow_redirect = Keyword.get(options, :follow_redirect, false)
             global_max_redirect = Keyword.get(options, :max_redirect, 5)
             global_force_redirect = Keyword.get(options, :force_redirect, false)
@@ -100,53 +99,44 @@ defmodule Rackla do
                 nil -> []
               end
 
-            hackney_request =
-              :hackney.request(
-                Map.get(request, :method, :get),
-                Map.get(request, :url, ""),
-                Map.get(request, :headers, %{}) |> Enum.into([]),
-                Map.get(request, :body, ""),
-                [
-                  insecure: Map.get(request_options, :insecure, global_insecure),
-                  connect_timeout: Map.get(request_options, :connect_timeout, global_connect_timeout),
-                  recv_timeout: Map.get(request_options, :receive_timeout, global_receive_timeout),
-                  follow_redirect: Map.get(request_options, :follow_redirect, global_follow_redirect),
-                  max_redirect: Map.get(request_options, :max_redirect, global_max_redirect),
-                  force_redirect: Map.get(request_options, :force_redirect, global_force_redirect)
-                ] ++ proxy_options
-              )
+            request = HTTPotion.request(
+              Map.get(request, :method, :get),
+              Map.get(request, :url, ""),
+              [
+                body: Map.get(request, :body, ""),
+                headers: Map.get(request, :headers, %{}) |> Enum.into([]),
+                timeout: Map.get(request_options, :timeout, global_timeout),
+                follow_redirects: Map.get(request_options, :follow_redirect, global_follow_redirect),
+              ]
+            )
 
-            case hackney_request do
-              {:ok, {:maybe_redirect, _, _, _}} ->
-                warn_request(:force_redirect_disabled)
+            # IO.inspect(request)
 
-              {:ok, status, headers, body_ref} ->
-                case :hackney.body(body_ref) do
-                  {:ok, body} ->
-                    consumer = receive do
-                      {pid, :ready} -> pid
-                    end
+            case request do
+              %HTTPotion.Response{status_code: 301} ->
+                warn_request(:redirects_disabled)
 
-                    global_full = Keyword.get(options, :full, false)
-
-                    response =
-                      if Map.get(request_options, :full, global_full) do
-                        %Rackla.Response{status: status, headers: headers |> Enum.into(%{}), body: body}
-                      else
-                        body
-                      end
-
-                    send(consumer, {self, {:ok, response}})
-
-                  {:error, reason} ->
-                    warn_request(reason)
+              %HTTPotion.Response{body: body, headers: headers, status_code: status} ->
+                consumer = receive do
+                  {pid, :ready} -> pid
                 end
 
-              {:error, {reason, _partial_body}} ->
-                warn_request(reason)
+                global_full = Keyword.get(options, :full, false)
 
-              {:error, reason} ->
-                warn_request(reason)
+                response =
+                  if Map.get(request_options, :full, global_full) do
+                    %Rackla.Response{status: status, headers: headers.hdrs, body: body}
+                  else
+                    body
+                  end
+
+                send(consumer, {self, {:ok, response}})
+
+              %HTTPotion.ErrorResponse{message: "req_timedout"} ->
+                warn_request(:timeout)
+
+              %HTTPotion.ErrorResponse{message: reason} ->
+                warn_request(reason |> String.to_atom())
             end
           end)
 

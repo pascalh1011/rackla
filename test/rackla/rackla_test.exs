@@ -9,7 +9,7 @@
   Plug.Adapters.Cowboy.http(TestRouter, [], port: @test_router_port)
 
   test "Rackla.request - single URL" do
-    rackla = request("http://localhost:#{@test_router_port}/api/text/foo-bar")
+    rackla = request("http://127.0.0.1:#{@test_router_port}/api/text/foo-bar")
 
     case rackla do
       %Rackla{producers: producers} ->
@@ -26,8 +26,8 @@
 
   test "Rackla.request - multiple URLs" do
     urls = [
-      "http://localhost:#{@test_router_port}/api/json/foo-bar",
-      "http://localhost:#{@test_router_port}/api/text/foo-bar"
+      "http://127.0.0.1:#{@test_router_port}/api/json/foo-bar",
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
     ]
 
     rackla = request(urls)
@@ -49,7 +49,7 @@
 
   test "Rackla.collect - collect single response" do
     response_item =
-      "http://localhost:#{@test_router_port}/api/text/foo-bar"
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
       |> request(full: true)
       |> collect
 
@@ -65,9 +65,9 @@
   test "Rackla.collect - request specific :full == true" do
     [only_body, full] =
       [
-        "http://localhost:#{@test_router_port}/api/text/foo-bar",
+        "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar",
         %Rackla.Request{
-          url: "http://localhost:#{@test_router_port}/api/text/foo-bar",
+          url: "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar",
           options: %{full: true}
         }
       ]
@@ -86,10 +86,10 @@
     [only_body, full] =
       [
         %Rackla.Request{
-          url: "http://localhost:#{@test_router_port}/api/text/foo-bar",
+          url: "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar",
           options: %{full: false}
         },
-        "http://localhost:#{@test_router_port}/api/text/foo-bar"
+        "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
       ]
       |> request(full: true)
       |> collect
@@ -104,7 +104,7 @@
 
   test "Rackla.collect - collect single response (PUT)" do
     response_item =
-      %Rackla.Request{method: :put, url: "http://localhost:#{@test_router_port}/api/text/foo-bar"}
+      %Rackla.Request{method: :put, url: "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"}
       |> request(full: true)
       |> collect
 
@@ -119,7 +119,7 @@
 
   test "Rackla.collect - collect single response (POST)" do
     response_item =
-      %Rackla.Request{method: :post, url: "http://localhost:#{@test_router_port}/api/text/foo-bar"}
+      %Rackla.Request{method: :post, url: "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"}
       |> request(full: true)
       |> collect
 
@@ -134,8 +134,8 @@
 
   test "Rackla.collect - multiple responses" do
     urls = [
-      "http://localhost:#{@test_router_port}/api/json/foo-bar",
-      "http://localhost:#{@test_router_port}/api/text/foo-bar"
+      "http://127.0.0.1:#{@test_router_port}/api/json/foo-bar",
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
     ]
 
     responses =
@@ -159,8 +159,8 @@
 
   test "Rackla.collect - multiple deterministic responses (full: false)" do
     urls = [
-      "http://localhost:#{@test_router_port}/api/json/foo-bar",
-      "http://localhost:#{@test_router_port}/api/text/foo-bar"
+      "http://127.0.0.1:#{@test_router_port}/api/json/foo-bar",
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
     ]
 
     [response_1, response_2] =
@@ -174,8 +174,8 @@
 
   test "Rackla.collect - multiple deterministic responses (full: true)" do
     urls = [
-      "http://localhost:#{@test_router_port}/api/json/foo-bar",
-      "http://localhost:#{@test_router_port}/api/text/foo-bar"
+      "http://127.0.0.1:#{@test_router_port}/api/json/foo-bar",
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
     ]
 
     [response_1, response_2] =
@@ -189,7 +189,7 @@
 
   test "Rackla.map - single response" do
     response_item =
-      "http://localhost:#{@test_router_port}/api/text/foo-bar"
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
       |> request(full: true)
       |> map(&(&1.body))
       |> collect
@@ -200,9 +200,9 @@
 
   test "Rackla.map - mulitple responses" do
     urls = [
-      "http://localhost:#{@test_router_port}/api/text/foo-bar",
-      "http://localhost:#{@test_router_port}/api/text/foo-bar",
-      "http://localhost:#{@test_router_port}/api/text/foo-bar"
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar",
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar",
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
     ]
 
     expected_response =
@@ -222,10 +222,10 @@
 
   test "Rackla.flat_map - single resuorce" do
     response_item =
-      "http://localhost:#{@test_router_port}/api/json/foo-bar"
+      "http://127.0.0.1:#{@test_router_port}/api/json/foo-bar"
       |> request
       |> flat_map(fn(_) ->
-        request("http://localhost:#{@test_router_port}/api/text/foo-bar", full: true)
+        request("http://127.0.0.1:#{@test_router_port}/api/text/foo-bar", full: true)
       end)
       |> map(&(&1.body))
       |> collect
@@ -235,8 +235,8 @@
   end
 
   test "Rackla.flat_map - deep nesting" do
-    url_1 = "http://localhost:#{@test_router_port}/api/json/foo-bar"
-    url_2 = "http://localhost:#{@test_router_port}/api/text/foo-bar"
+    url_1 = "http://127.0.0.1:#{@test_router_port}/api/json/foo-bar"
+    url_2 = "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
 
     response_item =
       url_1
@@ -261,7 +261,7 @@
   end
 
   test "Rackla.reduce - no accumulator" do
-    url = "http://localhost:#{@test_router_port}/api/text/foo-bar"
+    url = "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
 
     reduce_function =
       fn(x, acc) ->
@@ -285,7 +285,7 @@
   end
 
   test "Rackla.reduce - with accumulator" do
-    url = "http://localhost:#{@test_router_port}/api/text/foo-bar"
+    url = "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar"
 
     reduce_function =
       fn(x, acc) ->
@@ -341,7 +341,7 @@
 
   test "Rackla.response - valid and invalid URL" do
     urls = [
-      "http://localhost:#{@test_router_port}/api/text/foo-bar",
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar",
       "invalid-url"
     ]
 
@@ -363,7 +363,7 @@
 
   test "Rackla.map - valid and invalid URL" do
     urls = [
-      "http://localhost:#{@test_router_port}/api/text/foo-bar",
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar",
       "invalid-url"
     ]
 
@@ -402,7 +402,7 @@
 
   test "Rackla.flat_map - valid and invalid URL (variation 1)" do
     urls = [
-      "http://localhost:#{@test_router_port}/api/text/foo-bar",
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar",
       "invalid-url"
     ]
 
@@ -425,7 +425,7 @@
 
   test "Rackla.flat_map - valid and invalid URL (variation 2)" do
     urls = [
-      "http://localhost:#{@test_router_port}/api/text/foo-bar",
+      "http://127.0.0.1:#{@test_router_port}/api/text/foo-bar",
       "invalid-url"
     ]
 
@@ -493,8 +493,8 @@
 
   test "Timeout - receive_timeout is too short" do
     response =
-      "http://localhost:#{@test_router_port}/api/timeout"
-      |> request(receive_timeout: 1_000)
+      "http://127.0.0.1:#{@test_router_port}/api/timeout"
+      |> request(timeout: 1_000)
       |> collect
 
     assert response == {:error, :timeout}
@@ -502,32 +502,8 @@
 
   test "Timeout - receive_timeout is long enough" do
     response =
-      "http://localhost:#{@test_router_port}/api/timeout"
-      |> request(receive_timeout: 2_500)
-      |> collect
-
-    assert response == "ok"
-  end
-
-  test "Request specific timeout - receive_timeout is too short" do
-    response =
-      %Rackla.Request{
-        url: "http://localhost:#{@test_router_port}/api/timeout",
-        options: %{receive_timeout: 1_000}
-      }
-      |> request(receive_timeout: 5_000)
-      |> collect
-
-    assert response == {:error, :timeout}
-  end
-
-  test "Request specific timeout - receive_timeout is long enough" do
-    response =
-      %Rackla.Request{
-        url: "http://localhost:#{@test_router_port}/api/timeout",
-        options: %{receive_timeout: 2_500}
-      }
-      |> request(receive_timeout: 1)
+      "http://127.0.0.1:#{@test_router_port}/api/timeout"
+      |> request(timeout: 2_500)
       |> collect
 
     assert response == "ok"
@@ -536,18 +512,18 @@
   test "Follow redirect - do not follow by default" do
     response =
       %Rackla.Request{
-        url: "http://localhost:#{@test_router_port}/test/redirect/1",
+        url: "http://127.0.0.1:#{@test_router_port}/test/redirect/1",
       }
       |> request
       |> collect
 
-    assert response == "redirect body"
+    assert response == {:error, :redirects_disabled}
   end
 
   test "Follow redirect - follow redirect can be enabled in global setting" do
     response =
       %Rackla.Request{
-        url: "http://localhost:#{@test_router_port}/test/redirect/1",
+        url: "http://127.0.0.1:#{@test_router_port}/test/redirect/1",
       }
       |> request(follow_redirect: true)
       |> collect
@@ -558,7 +534,7 @@
   test "Follow redirect - follow redirect can be enabled in request setting" do
     response =
       %Rackla.Request{
-        url: "http://localhost:#{@test_router_port}/test/redirect/1",
+        url: "http://127.0.0.1:#{@test_router_port}/test/redirect/1",
         options: %{follow_redirect: true}
       }
       |> request
@@ -567,30 +543,10 @@
     assert response == "redirect done!"
   end
 
-  test "Max redirect - default should be 5" do
-    response =
-      %Rackla.Request{
-        url: "http://localhost:#{@test_router_port}/test/redirect/5",
-      }
-      |> request(follow_redirect: true)
-      |> collect
-
-    assert response == "redirect done!"
-
-    response =
-      %Rackla.Request{
-        url: "http://localhost:#{@test_router_port}/test/redirect/6",
-      }
-      |> request(follow_redirect: true)
-      |> collect
-
-    assert response == {:error, :max_redirect_overflow}
-  end
-
   test "Max redirect - change number of redirects in global setting" do
     response =
       %Rackla.Request{
-        url: "http://localhost:#{@test_router_port}/test/redirect/10",
+        url: "http://127.0.0.1:#{@test_router_port}/test/redirect/10",
       }
       |> request(follow_redirect: true, max_redirect: 10)
       |> collect
@@ -601,7 +557,7 @@
   test "Max redirect - change number of redirects in request setting" do
     response =
       %Rackla.Request{
-        url: "http://localhost:#{@test_router_port}/test/redirect/10",
+        url: "http://127.0.0.1:#{@test_router_port}/test/redirect/10",
         options: %{follow_redirect: true, max_redirect: 10}
       }
       |> request
@@ -610,23 +566,23 @@
     assert response == "redirect done!"
   end
 
-  test "POST redirect - POST are not following redirect by default" do
+  test "POST redirect - POST are following redirect by default" do
     response =
       %Rackla.Request{
         method: :post,
-        url: "http://localhost:#{@test_router_port}/test/post-redirect/5",
+        url: "http://127.0.0.1:#{@test_router_port}/test/post-redirect/5",
       }
       |> request(follow_redirect: true)
       |> collect
 
-    assert response == {:error, :force_redirect_disabled}
+    assert response == "post redirect done!"
   end
 
   test "POST redirect - POST can be forced to follow redirects in global setting" do
     response =
       %Rackla.Request{
         method: :post,
-        url: "http://localhost:#{@test_router_port}/test/post-redirect/5",
+        url: "http://127.0.0.1:#{@test_router_port}/test/post-redirect/5",
       }
       |> request(follow_redirect: true, force_redirect: true)
       |> collect
@@ -638,7 +594,7 @@
     response =
       %Rackla.Request{
         method: :post,
-        url: "http://localhost:#{@test_router_port}/test/post-redirect/5",
+        url: "http://127.0.0.1:#{@test_router_port}/test/post-redirect/5",
         options: %{follow_redirect: true, force_redirect: true}
       }
       |> request
@@ -649,7 +605,7 @@
 
   test "Convert incoming request to a Rackla.Request" do
     body = "this is a test body"
-    url = "http://localhost:#{@test_router_port}/test/incoming_request_with_options"
+    url = "http://127.0.0.1:#{@test_router_port}/test/incoming_request_with_options"
 
     response =
       %Rackla.Request{
@@ -664,7 +620,7 @@
 
     assert Map.get(response, "body") == body
     assert Map.get(response, "method") == "post"
-    assert Map.get(response, "options") == %{"connect_timeout" => 1337}
+    assert Map.get(response, "options") == %{"timeout" => 1337}
     assert Map.get(response, "url") == url
     assert response |> Map.get("headers") |> Map.get("test-header") == "test-value"
   end
@@ -672,7 +628,7 @@
   test "Convert incoming request with complex url to a Rackla.Request" do
     username_password = "user:password"
     scheme = "http://"
-    url = "#{scheme}localhost:#{@test_router_port}/test/incoming_request?key1=value1&key2=value2"
+    url = "#{scheme}127.0.0.1:#{@test_router_port}/test/incoming_request?key1=value1&key2=value2"
     url_with_authorization = url |> String.split(scheme) |> Enum.join("#{scheme}#{username_password}@")
 
     response =

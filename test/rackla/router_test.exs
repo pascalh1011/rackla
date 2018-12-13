@@ -10,7 +10,7 @@ defmodule Rackla.RouterTest do
   test "Proxy" do
     conn =
       :get
-      |> conn("/test/proxy?http://localhost:#{@test_router_port}/api/text/foo-bar")
+      |> conn("/test/proxy?http://127.0.0.1:#{@test_router_port}/api/text/foo-bar")
       |> TestRouter.call(@opts)
 
     assert conn.state == :chunked
@@ -23,7 +23,7 @@ defmodule Rackla.RouterTest do
   test "Proxy - set status" do
     conn =
       :get
-      |> conn("/test/proxy/404?http://localhost:#{@test_router_port}/api/text/foo-bar")
+      |> conn("/test/proxy/404?http://127.0.0.1:#{@test_router_port}/api/text/foo-bar")
       |> TestRouter.call(@opts)
 
     assert conn.state == :chunked
@@ -36,7 +36,7 @@ defmodule Rackla.RouterTest do
   test "Proxy - set headers" do
     conn =
       :get
-      |> conn("/test/proxy/set-headers?http://localhost:#{@test_router_port}/api/text/foo-bar")
+      |> conn("/test/proxy/set-headers?http://127.0.0.1:#{@test_router_port}/api/text/foo-bar")
       |> TestRouter.call(@opts)
 
       assert conn.state == :chunked
@@ -50,7 +50,7 @@ defmodule Rackla.RouterTest do
   test "Proxy - multi async" do
     conn =
       :get
-      |> conn("/test/proxy/multi?http://localhost:#{@test_router_port}/api/timeout|http://localhost:#{@test_router_port}/api/text/foo-bar")
+      |> conn("/test/proxy/multi?http://127.0.0.1:#{@test_router_port}/api/timeout|http://127.0.0.1:#{@test_router_port}/api/text/foo-bar")
       |> TestRouter.call(@opts)
 
     assert conn.state == :chunked
@@ -63,7 +63,7 @@ defmodule Rackla.RouterTest do
   test "Proxy - multi sync" do
     conn =
       :get
-      |> conn("/test/proxy/multi/sync?http://localhost:#{@test_router_port}/api/timeout|http://localhost:#{@test_router_port}/api/text/foo-bar")
+      |> conn("/test/proxy/multi/sync?http://127.0.0.1:#{@test_router_port}/api/timeout|http://127.0.0.1:#{@test_router_port}/api/text/foo-bar")
       |> TestRouter.call(@opts)
 
     assert conn.state == :chunked
@@ -76,7 +76,7 @@ defmodule Rackla.RouterTest do
   test "Proxy with compression" do
     conn =
       :get
-      |> conn("/test/proxy/gzip?http://localhost:#{@test_router_port}/api/text/foo-bar")
+      |> conn("/test/proxy/gzip?http://127.0.0.1:#{@test_router_port}/api/text/foo-bar")
       |> put_req_header("accept-encoding", "gzip")
       |> TestRouter.call(@opts)
 
@@ -91,7 +91,7 @@ defmodule Rackla.RouterTest do
   test "Proxy with compression - missing accept-encoding" do
     conn =
       :get
-      |> conn("/test/proxy/gzip?http://localhost:#{@test_router_port}/api/text/foo-bar")
+      |> conn("/test/proxy/gzip?http://127.0.0.1:#{@test_router_port}/api/text/foo-bar")
       |> TestRouter.call(@opts)
 
     assert conn.state == :chunked
@@ -104,7 +104,7 @@ defmodule Rackla.RouterTest do
   test "Proxy with compression, forced - missing accept-encoding)" do
     conn =
       :get
-      |> conn("/test/proxy/gzip/force?http://localhost:#{@test_router_port}/api/text/foo-bar")
+      |> conn("/test/proxy/gzip/force?http://127.0.0.1:#{@test_router_port}/api/text/foo-bar")
       |> TestRouter.call(@opts)
 
     assert conn.state == :chunked

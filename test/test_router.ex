@@ -87,7 +87,7 @@ defmodule TestRouter do
   end
 
   post "/test/incoming_request_with_options" do
-    {:ok, rackla_request} = incoming_request(%{connect_timeout: 1337})
+    {:ok, rackla_request} = incoming_request(%{timeout: 1337})
 
     rackla_request
     |> Jason.encode!
